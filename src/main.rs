@@ -157,5 +157,5 @@ fn main() {
 
     render(&mut framebuffer, &uniforms, &model.vertices);
 
-    println!("{:?}", framebuffer);
+    //println!("{:?}", framebuffer);
 }

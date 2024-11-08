@@ -1,4 +1,8 @@
 // color.rs
+
+use crate::calculate_bounding_box;
+use crate::barycentric_coordinates;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
     pub r: f32,
@@ -23,5 +27,17 @@ impl Color {
         let g = (self.g * 255.0) as u32;
         let b = (self.b * 255.0) as u32;
         (r << 16) | (g << 8) | b
+    }
+}
+
+impl std::ops::Mul<f32> for Color {
+    type Output = Color;
+
+    fn mul(self, intensity: f32) -> Self::Output {
+        Color {
+            r: self.r * intensity,
+            g: self.g * intensity,
+            b: self.b * intensity,
+        }
     }
 }
