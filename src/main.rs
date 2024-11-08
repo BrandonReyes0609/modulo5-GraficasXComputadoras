@@ -46,7 +46,7 @@ impl Model3D {
     }
 }
 
-#[derive(Debug)]  // Agrega Debug para permitir la impresión de Framebuffer
+#[derive(Debug)]
 struct Framebuffer {
     width: usize,
     height: usize,
