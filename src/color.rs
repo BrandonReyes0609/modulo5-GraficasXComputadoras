@@ -1,7 +1,6 @@
 // color.rs
 
-use crate::calculate_bounding_box;
-use crate::barycentric_coordinates;
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {

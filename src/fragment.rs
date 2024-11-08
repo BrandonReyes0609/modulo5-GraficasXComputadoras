@@ -5,7 +5,7 @@ use crate::color::Color;
 pub struct Fragment {
     pub position: Vec2,
     pub color: Color,
-    pub depth: f32,
+    pub depth: f32, // Profundidad en el eje Z
 }
 
 impl Fragment {

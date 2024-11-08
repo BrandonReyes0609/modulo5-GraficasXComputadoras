@@ -1,7 +1,8 @@
 use crate::obj::Obj;
 use crate::vertex::Vertex;
 use crate::color::Color;
-use crate::fragment::Fragment;
+use crate::model::Model3D;
+use crate::triangle::triangle; // Importa la función triangle
 use nalgebra_glm::{Vec3, Mat4};
 
 // Asegúrate de importar todos los módulos necesarios
@@ -12,7 +13,6 @@ mod fragment;
 mod line;
 mod triangle;
 mod model;
-use crate::model::Model3D;
 
 // Importa Model3D correctamente
 
@@ -107,34 +107,37 @@ fn barycentric_coordinates(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3) -> (f32, f32,
     (u, v, w)
 }
 
-fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Vertex]) {
+fn render(
+    framebuffer: &mut Framebuffer,
+    z_buffer: &mut Vec<f32>,
+    uniforms: &Uniforms,
+    vertex_array: &[Vertex],
+) {
     let transformed_vertices: Vec<Vertex> = vertex_array
         .iter()
         .map(|vertex| vertex_shader(vertex, uniforms))
         .collect();
 
-    for (i, vertex) in transformed_vertices.iter().enumerate() {
-        println!("Vértice transformado {}: {:?}", i, vertex.transformed_position);
-    }
-
     for triangle_vertices in transformed_vertices.chunks(3) {
         if triangle_vertices.len() == 3 {
-            let (v1, v2, v3) = (
-                &triangle_vertices[0].transformed_position,
-                &triangle_vertices[1].transformed_position,
-                &triangle_vertices[2].transformed_position,
+            // Llama a la función triangle importada
+            let fragments = triangle(
+                &triangle_vertices[0],
+                &triangle_vertices[1],
+                &triangle_vertices[2],
             );
 
-            let (min_x, min_y, max_x, max_y) = calculate_bounding_box(v1, v2, v3);
+            for fragment in fragments {
+                let x = fragment.position.x as usize;
+                let y = fragment.position.y as usize;
 
-            for x in min_x..=max_x {
-                for y in min_y..=max_y {
-                    let point = Vec3::new(x as f32, y as f32, 0.0);
-                    let (u, v, w) = barycentric_coordinates(&point, v1, v2, v3);
+                if x < framebuffer.width && y < framebuffer.height {
+                    let index = y * framebuffer.width + x;
 
-                    if u >= 0.0 && v >= 0.0 && w >= 0.0 {
-                        let color = triangle_vertices[0].color.to_hex();
-                        framebuffer.set_current_color(x as usize, y as usize, color);
+                    // Compara la profundidad del fragmento con el z-buffer
+                    if fragment.depth < z_buffer[index] {
+                        z_buffer[index] = fragment.depth;
+                        framebuffer.set_current_color(x, y, fragment.color.to_hex());
                     }
                 }
             }
@@ -142,11 +145,16 @@ fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
     }
 }
 
+
+
 fn main() {
     let width = 800;
     let height = 600;
     let mut framebuffer = Framebuffer::new(width, height);
     framebuffer.clear(Color::black().to_hex());
+
+    // Inicializar el z-buffer
+    let mut z_buffer = vec![f32::INFINITY; width * height];
 
     let obj = Obj::load("assets/file.obj").expect("Failed to load OBJ file");
 
@@ -155,7 +163,7 @@ fn main() {
 
     let uniforms = Uniforms::new(Vec3::new(0.0, 0.0, 0.0), 1.0);
 
-    render(&mut framebuffer, &uniforms, &model.vertices);
+    render(&mut framebuffer, &mut z_buffer, &uniforms, &model.vertices);
 
-    //println!("{:?}", framebuffer);
+    println!("{:?}", framebuffer);
 }
