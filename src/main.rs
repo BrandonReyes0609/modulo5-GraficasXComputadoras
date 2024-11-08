@@ -92,11 +92,9 @@ impl Uniforms {
 }
 
 fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
-    // Transformar posición
     let position = nalgebra_glm::vec4(vertex.position.x, vertex.position.y, vertex.position.z, 1.0);
     let transformed = uniforms.model_matrix * position;
 
-    // División de perspectiva
     let w = transformed.w;
     let transformed_position = Vec3::new(transformed.x / w, transformed.y / w, transformed.z / w);
 
@@ -115,7 +113,7 @@ fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
         .map(|vertex| vertex_shader(vertex, uniforms))
         .collect();
 
-    // Primitive Assembly Stage
+    // Primitive Assembly & Rasterization Stage
     let mut fragments: Vec<Fragment> = Vec::new();
     for triangle_vertices in transformed_vertices.chunks(3) {
         if triangle_vertices.len() == 3 {
@@ -128,7 +126,7 @@ fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
         }
     }
 
-    // Rasterization Stage & Fragment Processing Stage
+    // Fragment Processing Stage
     for fragment in fragments {
         let x = fragment.position.x as usize;
         let y = fragment.position.y as usize;
