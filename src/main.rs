@@ -1,10 +1,9 @@
-// main.rs
-
 use crate::obj::Obj;
 use crate::vertex::Vertex;
 use crate::color::Color;
 use crate::fragment::Fragment;
 use crate::triangle::triangle;
+use nalgebra_glm::{Vec3, Mat4};
 
 mod obj;
 mod vertex;
@@ -77,20 +76,43 @@ impl Framebuffer {
 }
 
 pub struct Uniforms {
-    // Agrega aquí cualquier variable uniforme necesaria para tu renderizado
+    pub model_matrix: Mat4,
 }
 
-fn render(framebuffer: &mut Framebuffer, _uniforms: &Uniforms, vertex_array: &[Vertex]) {
+impl Uniforms {
+    pub fn new(translation: Vec3, scale: f32) -> Self {
+        let model_matrix = Mat4::new(
+            scale, 0.0, 0.0, translation.x,
+            0.0, scale, 0.0, translation.y,
+            0.0, 0.0, scale, translation.z,
+            0.0, 0.0, 0.0, 1.0,
+        );
+        Self { model_matrix }
+    }
+}
+
+fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
+    // Transformar posición
+    let position = nalgebra_glm::vec4(vertex.position.x, vertex.position.y, vertex.position.z, 1.0);
+    let transformed = uniforms.model_matrix * position;
+
+    // División de perspectiva
+    let w = transformed.w;
+    let transformed_position = Vec3::new(transformed.x / w, transformed.y / w, transformed.z / w);
+
+    Vertex {
+        position: vertex.position,
+        color: vertex.color,
+        transformed_position,
+        ..*vertex
+    }
+}
+
+fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Vertex]) {
     // Vertex Shader Stage
     let transformed_vertices: Vec<Vertex> = vertex_array
         .iter()
-        .map(|v| {
-            Vertex {
-                position: v.position,
-                color: v.color,
-                ..*v
-            }
-        })
+        .map(|vertex| vertex_shader(vertex, uniforms))
         .collect();
 
     // Primitive Assembly Stage
@@ -105,9 +127,6 @@ fn render(framebuffer: &mut Framebuffer, _uniforms: &Uniforms, vertex_array: &[V
             fragments.extend(tri_fragments);
         }
     }
-
-    // Verificación: Imprimir cuántos fragmentos se han generado
-    println!("Fragments generated: {}", fragments.len());
 
     // Rasterization Stage & Fragment Processing Stage
     for fragment in fragments {
@@ -129,7 +148,7 @@ fn main() {
     let mut model = Model3D::new();
     model.add_vertices_from_obj(&obj);
 
-    let uniforms = Uniforms {};
+    let uniforms = Uniforms::new(Vec3::new(0.0, 0.0, 0.0), 1.0);
 
     render(&mut framebuffer, &uniforms, &model.vertices);
 
