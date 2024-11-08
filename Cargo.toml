@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 nalgebra = "0.28"
 nalgebra-glm = "0.19"
+tobj = "3.0"  # Asegúrate de estar usando una versión actual

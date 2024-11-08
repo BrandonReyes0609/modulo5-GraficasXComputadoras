@@ -1,16 +1,13 @@
-// Definición de un punto en 3D
-#[derive(Debug, Clone, Copy)]
-struct Point3D {
-    x: f32,
-    y: f32,
-    z: f32,
-}
+// main.rs
 
-// Estructura de un vértice que contiene un punto en 3D
-#[derive(Debug, Clone, Copy)]
-struct Vertex {
-    position: Point3D,
-}
+use crate::obj::Obj;
+use crate::vertex::Vertex;
+mod obj;
+mod vertex;
+mod color;
+mod fragment;
+mod line;
+mod triangle;
 
 // Estructura de una arista que conecta dos vértices
 #[derive(Debug)]
@@ -43,44 +40,22 @@ impl Model3D {
         }
     }
 
-    // Método para agregar un vértice al modelo
-    fn add_vertex(&mut self, position: Point3D) -> Vertex {
-        let vertex = Vertex { position };
-        self.vertices.push(vertex);
-        vertex
-    }
-
-    // Método para agregar una arista al modelo
-    fn add_edge(&mut self, start: Vertex, end: Vertex) {
-        let edge = Edge { start, end };
-        self.edges.push(edge);
-    }
-
-    // Método para agregar una cara (triángulo) al modelo
-    fn add_face(&mut self, v1: Vertex, v2: Vertex, v3: Vertex) {
-        let face = Face { vertices: [v1, v2, v3] };
-        self.faces.push(face);
+    // Método para agregar vértices desde un objeto OBJ
+    fn add_vertices_from_obj(&mut self, obj: &Obj) {
+        for vertex in obj.get_vertex_array() {
+            self.vertices.push(vertex);
+        }
     }
 }
 
 fn main() {
-    // Crear un nuevo modelo 3D
+    // Cargar el archivo OBJ
+    let obj = Obj::load("assets/tinker.obj").expect("Failed to load OBJ file");
+
+    // Crear un nuevo modelo 3D y cargar vértices desde el archivo OBJ
     let mut model = Model3D::new();
+    model.add_vertices_from_obj(&obj);
 
-    // Agregar vértices al modelo
-    let v1 = model.add_vertex(Point3D { x: 0.0, y: 0.0, z: 0.0 });
-    let v2 = model.add_vertex(Point3D { x: 1.0, y: 0.0, z: 0.0 });
-    let v3 = model.add_vertex(Point3D { x: 0.0, y: 1.0, z: 0.0 });
-    let v4 = model.add_vertex(Point3D { x: 1.0, y: 1.0, z: 0.0 });
-
-    // Agregar aristas al modelo
-    model.add_edge(v1, v2);
-    model.add_edge(v2, v3);
-    model.add_edge(v3, v1);
-
-    // Agregar una cara al modelo (triángulo)
-    model.add_face(v1, v2, v3);
-
-    // Imprimir el modelo 3D
+    // Imprimir el modelo 3D con los vértices cargados desde el archivo OBJ
     println!("{:#?}", model);
 }
