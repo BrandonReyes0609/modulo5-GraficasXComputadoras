@@ -1,5 +1,4 @@
 // color.rs
-
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
     pub r: f32,
@@ -26,4 +25,3 @@ impl Color {
         (r << 16) | (g << 8) | b
     }
 }
-

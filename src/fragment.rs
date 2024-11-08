@@ -1,5 +1,4 @@
 // fragment.rs
-
 use nalgebra_glm::Vec2;
 use crate::color::Color;
 
